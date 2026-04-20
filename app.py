@@ -1,39 +1,21 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+import numpy as np
+from flask import Flask, request, jsonify, render_template
 import pickle
-import pandas as pd
 
-# Load the model and transformer
-model = pickle.load(open('linear_regression_model.pkl', 'rb'))
-transformer = pickle.load(open('transformer.pkl', 'rb'))
+# Create flask app
+flask_app = Flask(__name__)
+model = pickle.load(open("model.pkl", "rb"))
 
-app = FastAPI()
+@flask_app.route("/")
+def Home():
+    return render_template("index.html")
 
-# Define a Pydantic model for your data
-class HealthData(BaseModel):
-    age: int
-    gender: str
-    blood_type: str
-    medical_condition: str
+@flask_app.route("/predict", methods = ["POST"])
+def predict():
+    float_features = [float(x) for x in request.form.values()]
+    features = [np.array(float_features)]
+    prediction = model.predict(features)
+    return render_template("index.html", prediction_text = "The flower species is {}".format(prediction))
 
-@app.post("/predict/")
-async def predict(data: HealthData):
-    # Convert the data to a DataFrame
-    input_df = pd.DataFrame([{
-        'Age': data.age,
-        'Gender': data.gender,
-        'Blood Type': data.blood_type,
-        'Medical Condition': data.medical_condition
-    }])
-
-    # Check for missing values
-    if input_df.isnull().values.any():
-        return {"error": "Please fill in all required fields."}
-    else:
-        # Transform and predict
-        transformed_features = transformer.transform(input_df)
-        prediction = model.predict(transformed_features)
-        output = round(prediction[0], 2)
-        return {"Predicted Billing Amount": output}
-
-# The app will be run using a command like: uvicorn app:app --reload
+if __name__ == "__main__":
+    flask_app.run(debug=True)
