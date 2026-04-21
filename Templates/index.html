@@ -6,27 +6,38 @@
     <title>Prediksi Biaya Rumah Sakit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; }
-        .card { border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn-predict { background-color: #007bff; color: white; width: 100%; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header-title { color: #0d6efd; font-weight: 700; }
+        .btn-predict { 
+            background: linear-gradient(45deg, #0d6efd, #0043a8); 
+            border: none; color: white; width: 100%; padding: 12px;
+            border-radius: 10px; font-weight: 600; transition: 0.3s;
+        }
+        .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4); }
+        #result { background-color: #e9f5ff; border-radius: 12px; padding: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-6 col-lg-5">
             <div class="card p-4">
-                <h3 class="text-center mb-4">Estimasi Billing Amount</h3>
+                <div class="text-center mb-4">
+                    <h3 class="header-title">Hospital Billing AI</h3>
+                    <p class="text-muted">Masukkan data pasien untuk estimasi biaya</p>
+                </div>
+                
                 <form id="predictForm">
                     <div class="mb-3">
-                        <label for="age" class="form-label">Usia (Age)</label>
-                        <input type="number" class="form-control" id="age" name="Age" placeholder="Contoh: 25" required>
+                        <label class="form-label fw-bold">Usia (Age)</label>
+                        <input type="number" class="form-control" name="Age" placeholder="Contoh: 30" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="gender" class="form-label">Jenis Kelamin (Gender)</label>
-                        <select class="form-select" id="gender" name="Gender" required>
+                        <label class="form-label fw-bold">Jenis Kelamin</label>
+                        <select class="form-select" name="Gender" required>
                             <option value="" selected disabled>Pilih Gender</option>
                             <option value="Male">Laki-laki</option>
                             <option value="Female">Perempuan</option>
@@ -34,23 +45,19 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="blood_type" class="form-label">Golongan Darah (Blood Type)</label>
-                        <select class="form-select" id="blood_type" name="Blood Type" required>
+                        <label class="form-label fw-bold">Golongan Darah</label>
+                        <select class="form-select" name="Blood Type" required>
                             <option value="" selected disabled>Pilih Golongan Darah</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
+                            <option value="A+">A+</option><option value="A-">A-</option>
+                            <option value="B+">B+</option><option value="B-">B-</option>
+                            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                            <option value="O+">O+</option><option value="O-">O-</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label for="medical_condition" class="form-label">Kondisi Medis (Medical Condition)</label>
-                        <select class="form-select" id="medical_condition" name="Medical Condition" required>
+                        <label class="form-label fw-bold">Kondisi Medis</label>
+                        <select class="form-select" name="Medical Condition" required>
                             <option value="" selected disabled>Pilih Kondisi</option>
                             <option value="Cancer">Kanker</option>
                             <option value="Diabetes">Diabetes</option>
@@ -61,13 +68,12 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-predict btn-lg">Prediksi Sekarang</button>
+                    <button type="submit" class="btn btn-predict mt-3" id="submitBtn">Mulai Prediksi</button>
                 </form>
 
-                <hr>
-                <div id="result" class="text-center mt-3 d-none">
-                    <h5>Estimasi Tagihan:</h5>
-                    <h2 class="text-success" id="billingAmount">$0.00</h2>
+                <div id="result" class="text-center mt-4 d-none">
+                    <span class="text-muted small">Estimasi Total Tagihan</span>
+                    <h2 class="text-primary mt-1" id="billingAmount">$0.00</h2>
                 </div>
             </div>
         </div>
@@ -78,17 +84,23 @@
     const form = document.getElementById('predictForm');
     const resultDiv = document.getElementById('result');
     const amountText = document.getElementById('billingAmount');
+    const submitBtn = document.getElementById('submitBtn');
 
     form.onsubmit = async (e) => {
         e.preventDefault();
         
-        // Ambil data dari form
+        // Ganti teks tombol saat proses
+        submitBtn.innerText = "Menghitung...";
+        submitBtn.disabled = true;
+
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
-        // Simulasi pengiriman data ke Backend (Flask/FastAPI)
-        // Ganti URL ini dengan endpoint API Anda nantinya
+        // KRITIKAL: Pastikan Age dikirim sebagai Number (angka), bukan String
+        data.Age = parseInt(data.Age);
+
         try {
+            // URL '/' + 'predict' otomatis mengarah ke domain Render kamu
             const response = await fetch('/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -97,12 +109,19 @@
             
             const result = await response.json();
             
-            // Tampilkan hasil
-            amountText.innerText = `$${result.prediction.toLocaleString()}`;
-            resultDiv.classList.remove('d-none');
+            if (result.prediction) {
+                // Tampilkan hasil dengan format mata uang
+                amountText.innerText = `$${result.prediction.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                resultDiv.classList.remove('d-none');
+            } else {
+                alert("Error dari Model: " + result.error);
+            }
         } catch (error) {
             console.error("Error:", error);
-            alert("Gagal terhubung ke server model!");
+            alert("Gagal terhubung ke server. Pastikan app.py sudah jalan.");
+        } finally {
+            submitBtn.innerText = "Mulai Prediksi";
+            submitBtn.disabled = false;
         }
     };
 </script>
