@@ -6,7 +6,8 @@ import os
 # ========================
 # Inisialisasi Flask App
 # ========================
-app = Flask(_name_)
+# PERBAIKAN: Gunakan double underscore __name__
+app = Flask(__name__)
 
 # ========================
 # Load Model dan Transformer
@@ -50,6 +51,8 @@ def predict():
 # ========================
 # Run Local / Render
 # ========================
-if _name_ == "_main_":
+# PERBAIKAN: Gunakan double underscore __name__ dan "__main__"
+if __name__ == "__main__":
+    # Render memberikan port secara dinamis melalui environment variable PORT
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
